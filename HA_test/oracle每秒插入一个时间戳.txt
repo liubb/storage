@@ -1,0 +1,47 @@
+NLS_DATE_FORMAT="YYYY-MON-DD HH24:MI:SS"; export NLS_DATE_FORMAT
+export ORACLE_SID=coredbb1
+sqlplus / as sysdba
+alter session set container=EHR;
+GRANT EXECUTE ON SYS.DBMS_LOCK TO cesc;
+
+
+
+
+su - oracle
+sqlplus cesc/Ces_201901@EHR
+create table my_sec(id number,my_date date default sysdate) tablespace NNC_INDEX01;
+
+
+#create table my_sec(id number,my_date varchar(20)) tablespace NNC_INDEX01;
+
+
+
+create sequence seq;
+
+create or replace procedure proc_insert as
+begin
+  for i in 1 .. 14400 
+  loop
+     insert into my_sec(id) values (seq.nextval);
+     DBMS_LOCK.SLEEP(1);
+     commit;
+  end loop;
+end;
+/
+
+create sequence seq;
+execute proc_insert;
+drop procedure proc_insert;
+
+drop sequence seq;
+
+
+
+su - oracle
+sqlplus cesc/Ces_201901@EHR
+select id,to_char(my_date,'yyyy-MM-dd HH24:mi:ss') from my_sec order by id asc;
+
+«Â¿Ì
+drop sequence seq;
+truncate table my_sec;
+commit;
